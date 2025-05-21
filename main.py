@@ -146,40 +146,4 @@ if __name__ == "__main__":
         if cv2.waitKey(1) == ord('q'):
             break
         
-# while True:
-#     success, img = cap.read()
-#     img = cv2.flip(img, 1)
-#     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-#     results = hands.process(img_rgb)
 
-#     if results.multi_hand_landmarks:
-#         for handLms in results.multi_hand_landmarks:
-#             lm_list = handLms.landmark
-#             h, w, _ = img.shape
-
-#             # Получаем координаты ладони (например, индекс 9)
-#             raw_x = int(lm_list[9].x * w)
-#             raw_y = int((1 - lm_list[9].y) * h)
-
-
-#             pyautogui.moveTo(smooth_x, smooth_y)
-
-#             # Расстояние между большим и указательным пальцем
-#             x1, y1 = int(lm_list[4].x * w), int(lm_list[4].y * h)
-#             x2, y2 = int(lm_list[8].x * w), int(lm_list[8].y * h)
-#             distance = math.hypot(x2 - x1, y2 - y1)
-
-#             if distance < 40:
-#                 if not dragging:
-#                     dragging = True
-#                     pyautogui.mouseDown()
-#             else:
-#                 if dragging:
-#                     dragging = False
-#                     pyautogui.mouseUp()
-
-#             mp_draw.draw_landmarks(img, handLms, mp_hands.HAND_CONNECTIONS)
-
-#     cv2.imshow("Hand Tracking with ROI", img)
-#     if cv2.waitKey(1) == ord('q'):
-#         break
