@@ -48,7 +48,7 @@ def is_index_and_thumb_finger_extended(hand_landmarks, hand_label='Right'):
     
     return all([index_extended, middle_folded, ring_folded, pinky_folded, thumb_folded])
 
-def is_only_pinky_extended(hand_landmarks, hand_label):
+def is_only_pinky_extended(hand_landmarks, hand_label='Right'):
     is_thumb_folded_flag = is_thumb_folded(hand_landmarks, hand_label)
     is_index_folded = not is_finger_extended(hand_landmarks, tip_id=8, pip_id=6)
     is_middle_folded = not is_finger_extended(hand_landmarks, tip_id=12, pip_id=10)
@@ -116,6 +116,8 @@ if __name__ == "__main__":
     print(max_x, max_y)
 
     last_movment_time = time.time()
+    right_click_delay = time.time()
+    scrolling_delay = time.time()
 
     # mouse control
     pointer_pos_x, pointer_pos_y = max_x / 2, max_y / 2
@@ -131,9 +133,10 @@ if __name__ == "__main__":
     pyautogui.moveTo(pointer_pos_x, pointer_pos_y)
     hand_pos_x, hand_pos_y = -1, -1
     
-
     dragging = False
-    while True:
+    action_label = "None"
+    while True: 
+        # action_label = "None"
         res, frame = cap.read()
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = cv2.flip(frame, 0)
@@ -165,6 +168,7 @@ if __name__ == "__main__":
                     # print(raw_x, raw_y)
                     # print(pointer_pos_delta_x, pointer_pos_delta_y)
                     # print()
+                    action_label = "mouse movement"
                     if pointer_pos_x + pointer_pos_delta_x > 0 and \
                             pointer_pos_x + pointer_pos_delta_x < screen_width and \
                             pointer_pos_y + pointer_pos_delta_y > 0 and \
@@ -175,7 +179,9 @@ if __name__ == "__main__":
                 
                 if is_index_finger_extended(lm_list):
                 # if is_ok_sign(lm_list, threshold=0.2):
+                    action_label = "left click"
                     if not dragging:
+
                         dragging = True
                         pyautogui.mouseDown()
                         
@@ -184,21 +190,30 @@ if __name__ == "__main__":
                         dragging = False
                         pyautogui.mouseUp()
                 
+                if is_only_pinky_extended(lm_list) and time.time() - right_click_delay > 0.1:
+                    action_label = "right click"
+                    pyautogui.rightClick()
+                    right_click_delay = time.time()
+
                 if is_index_and_middle_extended_only(lm_list):
                     if not scrolling:
                         scrolling = True
+                    action_label = "scrolling"
                     direction = 1 if raw_y > scrolling_hand_pos_y else -1
                     hdirection = 1 if raw_x > scrolling_hand_pos_x else -1
-                    pyautogui.scroll(direction * scrolling_value)
-                    pyautogui.hscroll(hdirection * scrolling_value)
+                    if time.time() - scrolling_delay > 0.1: 
+                        if abs(raw_y - scrolling_hand_pos_y) > 5:
+                            pyautogui.scroll(direction * scrolling_value)
+                        if abs(raw_x - scrolling_hand_pos_x) > 5:
+                            pyautogui.hscroll(hdirection * scrolling_value)
+                        scrolling_delay = time.time()
                 else:
                     if scrolling:
                         scrolling = False
 
                 scrolling_hand_pos_x, scrolling_hand_pos_y = raw_x, raw_y
-
-                # Добавление текста
-                cv2.putText(frame, str(is_ok_sign(lm_list, threshold=0.1)), (10, 30), 
+                
+                cv2.putText(frame, action_label, (10, 30), 
                             fontFace=cv2.FONT_HERSHEY_SIMPLEX, 
                             fontScale=1, color=(0, 255, 0), thickness=2)
                 mp_draw.draw_landmarks(frame, handLms, mp_hands.HAND_CONNECTIONS)
